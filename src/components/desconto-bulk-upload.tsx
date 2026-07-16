@@ -234,7 +234,13 @@ export function DescontoBulkUpload({
         }
       }
 
-      if (distributorId && amount != null && errors.length === 0) {
+      // Só categoria Campanha consome verba
+      if (
+        distributorId &&
+        amount != null &&
+        category === "CAMPANHA" &&
+        errors.length === 0
+      ) {
         const avail = remaining.get(distributorId) ?? 0;
         if (amount > avail) {
           errors.push(
@@ -329,7 +335,7 @@ export function DescontoBulkUpload({
 
     const total = validRows.reduce((s, r) => s + (r.amount || 0), 0);
     const confirmed = window.confirm(
-      `Confirmar ${validRows.length} desconto(s), totalizando ${formatBRL(total)}? O saldo será reduzido de forma permanente.`
+      `Confirmar ${validRows.length} lançamento(s), totalizando ${formatBRL(total)}? Só a categoria Campanha desconta da verba; Sell In, Sell Out e Vendeu Ganhou só contabilizam.`
     );
     if (!confirmed) return;
 

@@ -44,7 +44,7 @@ export function SettleCampaignForm({
         const label =
           outcome === "NAO_ATINGIDA"
             ? `Marcar "${campaignName}" como campanha não atingida?`
-            : `Confirmar apuração de "${campaignName}" com valor?`;
+            : `Confirmar apuração de "${campaignName}"? Na primeira apuração o valor será descontado da verba do distribuidor.`;
         if (!window.confirm(label)) return;
 
         startTransition(async () => {

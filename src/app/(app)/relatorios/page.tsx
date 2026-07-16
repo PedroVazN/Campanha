@@ -56,9 +56,12 @@ export default async function RelatoriosPage({
       if (e.discountCategory) byCat[e.discountCategory] += e.debit;
     }
     const totalSpent = debits.reduce((s, e) => s + e.debit, 0);
-    // approximate opening: current - credits_in_month + debits_in_month (simplified for demo)
-    const opening = d.balance - credits + totalSpent;
-    const closing = opening + credits - totalSpent;
+    // Só Campanha altera a verba; demais categorias são só contábeis
+    const verbaDebits = debits
+      .filter((e) => e.discountCategory === "CAMPANHA")
+      .reduce((s, e) => s + e.debit, 0);
+    const opening = d.balance - credits + verbaDebits;
+    const closing = opening + credits - verbaDebits;
 
     return {
       distributor: d.name,

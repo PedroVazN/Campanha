@@ -7,7 +7,7 @@ import { DiscountCategory, Role } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { canManageFinance, canManageProducts, canManageUsers, canSeeAllDistributors } from "@/lib/rbac";
-import { creditVerba, debitDiscount } from "@/lib/ledger";
+import { creditVerba, debitDiscount, discountAffectsVerba } from "@/lib/ledger";
 import { computeCampaignStatus } from "@/lib/campaign-status";
 import {
   NAV_FLAG_KEYS,
@@ -341,13 +341,16 @@ export async function launchDiscountBatch(
     if (!Number.isInteger(item.referenceYear) || item.referenceYear < 2000) {
       throw new Error(`Linha ${i + 1}: ano de referência inválido.`);
     }
-    const avail = remaining.get(item.distributorId) ?? 0;
-    if (item.amount > avail) {
-      throw new Error(
-        `Linha ${i + 1}: saldo insuficiente em ${dist.name} (disponível ${avail.toFixed(2)}).`
-      );
+    // Só Campanha consome verba; demais categorias só contabilizam
+    if (discountAffectsVerba(item.category)) {
+      const avail = remaining.get(item.distributorId) ?? 0;
+      if (item.amount > avail) {
+        throw new Error(
+          `Linha ${i + 1}: saldo insuficiente em ${dist.name} (disponível ${avail.toFixed(2)}).`
+        );
+      }
+      remaining.set(item.distributorId, Math.round((avail - item.amount) * 100) / 100);
     }
-    remaining.set(item.distributorId, Math.round((avail - item.amount) * 100) / 100);
   }
 
   const date = new Date();
@@ -471,6 +474,8 @@ export async function settleCampaign(formData: FormData) {
   const campaign = await prisma.campaign.findUnique({ where: { id } });
   if (!campaign) throw new Error("Campanha não encontrada.");
 
+  const firstSettlement = campaign.settledAt == null;
+
   await prisma.campaign.update({
     where: { id },
     data: {
@@ -484,9 +489,27 @@ export async function settleCampaign(formData: FormData) {
     },
   });
 
+  // Primeira apuração atingida: desconta da verba do distribuidor
+  if (firstSettlement && settledOutcome === "ATINGIDA" && settledValue > 0) {
+    const refMonth = campaign.referenceMonth || new Date().getMonth() + 1;
+    const refYear = campaign.referenceYear || new Date().getFullYear();
+    await debitDiscount({
+      distributorId: campaign.distributorId,
+      amount: settledValue,
+      date: new Date(),
+      category: "CAMPANHA",
+      referenceMonth: refMonth,
+      referenceYear: refYear,
+      observation: settledNote || `Apuração campanha: ${campaign.name}`,
+      description: `Apuração campanha — ${campaign.name}`,
+      createdById: user.id,
+    });
+  }
+
   revalidatePath("/campanhas");
   revalidatePath("/vendedor");
   revalidatePath(`/distribuidores/${campaign.distributorId}`);
+  revalidatePath("/extrato");
   revalidatePath("/");
 }
 

@@ -90,8 +90,9 @@ export default async function GestorDashboard({
       .filter((e) => e.distributorId === d.id)
       .reduce((s, e) => s + e.credit, 0);
 
+    // Só Campanha reduz verba; demais débitos são só contábeis
     const valorDescontado = monthDebits
-      .filter((e) => e.distributorId === d.id)
+      .filter((e) => e.distributorId === d.id && e.discountCategory === "CAMPANHA")
       .reduce((s, e) => s + e.debit, 0);
 
     const campanhaApurada = settledCampaigns
@@ -217,8 +218,8 @@ export default async function GestorDashboard({
               Relatório por distribuidor
             </h2>
             <p className="text-sm text-muted mt-1">
-              Verba disponível, campanha apurada pelo ADM e valor descontado —{" "}
-              {monthName(month)}/{year}.
+              Verba disponível, campanha apurada (ADM) e desconto na verba (só categoria
+              Campanha) — {monthName(month)}/{year}.
             </p>
           </div>
         </div>
@@ -268,7 +269,7 @@ export default async function GestorDashboard({
                     <th className="text-right">Verba disponível</th>
                     <th className="text-right">Verba gerada no mês</th>
                     <th className="text-right">Campanha apurada (ADM)</th>
-                    <th className="text-right">Valor descontado</th>
+                    <th className="text-right">Desconto na verba (Campanha)</th>
                   </tr>
                 </thead>
                 <tbody>

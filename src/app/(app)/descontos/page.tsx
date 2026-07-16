@@ -25,8 +25,8 @@ export default async function DescontosPage() {
       <div>
         <h1 className="page-title">Lançar desconto</h1>
         <p className="page-desc">
-          Cada lançamento reduz o saldo disponível. Use o formulário unitário ou a planilha
-          para vários lançamentos.
+          Só a categoria <strong className="text-ink">Campanha</strong> desconta da verba.
+          Sell In, Sell Out e Vendeu Ganhou apenas contabilizam nos relatórios.
         </p>
       </div>
 
@@ -40,8 +40,8 @@ export default async function DescontosPage() {
         <h2 className="font-display font-semibold text-lg">Lançamento unitário</h2>
         <ConfirmFinanceForm
           action={launchDiscount}
-          confirmMessage="Confirmar desconto? O saldo do distribuidor será reduzido de forma permanente."
-          successMessage="Desconto lançado"
+          confirmMessage="Confirmar lançamento? Se a categoria for Campanha, a verba será reduzida. Sell In, Sell Out e Vendeu Ganhou só entram no relatório."
+          successMessage="Lançamento registrado"
         >
           <div className="panel p-4 grid sm:grid-cols-2 gap-3">
             <label className="space-y-1.5 sm:col-span-2">
