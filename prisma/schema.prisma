@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  /// URL direta (sem pooler) — use no Neon para migrate/db push
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                   String              @id @default(cuid())
+  name                 String
+  email                String              @unique
+  passwordHash         String
+  role                 String
+  /// JSON: { "campanhas": true, "verba": false, ... }
+  navFlags             String              @default("{}")
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  distributors         Distributor[]
+  projectionsCreated   BillingProjection[] @relation("ProjectionSeller")
+  projectionsResolved  BillingProjection[] @relation("ProjectionResolver")
+}
+
+model Distributor {
+  id           String              @id @default(cuid())
+  name         String
+  sellerId     String
+  seller       User                @relation(fields: [sellerId], references: [id])
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  campaigns    Campaign[]
+  ledger       LedgerEntry[]
+  projections  BillingProjection[]
+  balance      Float               @default(0)
+}
+
+model BillingProjection {
+  id             String       @id @default(cuid())
+  distributorId  String
+  distributor    Distributor  @relation(fields: [distributorId], references: [id])
+  sellerId       String
+  seller         User         @relation("ProjectionSeller", fields: [sellerId], references: [id])
+  amount         Float
+  description    String
+  referenceMonth Int
+  referenceYear  Int
+  /// ABERTA | GANHO | PERDIDO
+  status         String       @default("ABERTA")
+  resolvedById   String?
+  resolvedBy     User?        @relation("ProjectionResolver", fields: [resolvedById], references: [id])
+  resolvedAt     DateTime?
+  resolveNote    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Product {
+  id        String            @id @default(cuid())
+  name      String            @unique
+  createdAt DateTime          @default(now())
+  campaigns CampaignProduct[]
+}
+
+model Campaign {
+  id             String            @id @default(cuid())
+  name           String
+  category       String
+  status         String            @default("RASCUNHO")
+  distributorId  String
+  distributor    Distributor       @relation(fields: [distributorId], references: [id])
+  startDate      DateTime?
+  endDate        DateTime?
+  referenceMonth Int?
+  referenceYear  Int?
+  projectedQty   Float?
+  projectedValue Float?
+  unitValue      Float?
+  description    String?
+  observations   String?
+  /// Valor definido apenas na apuração pelo ADM/Gestor
+  settledValue   Float?
+  /// ATINGIDA | NAO_ATINGIDA — definido na apuração
+  settledOutcome String?
+  settledAt      DateTime?
+  settledById    String?
+  settledNote    String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  products       CampaignProduct[]
+}
+
+model CampaignProduct {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  unitValue  Float?
+
+  @@unique([campaignId, productId])
+}
+
+model LedgerEntry {
+  id               String      @id @default(cuid())
+  distributorId    String
+  distributor      Distributor @relation(fields: [distributorId], references: [id])
+  date             DateTime
+  type             String
+  discountCategory String?
+  description      String
+  credit           Float       @default(0)
+  debit            Float       @default(0)
+  balanceAfter     Float
+  referenceMonth   Int?
+  referenceYear    Int?
+  observation      String?
+  createdById      String?
+  createdAt        DateTime    @default(now())
+  immutable        Boolean     @default(true)
+}

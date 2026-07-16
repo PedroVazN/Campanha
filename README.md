@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SGI 4.0 — Sistema de Gestão Integrada
 
-## Getting Started
+Aplicação web para controle de **Verba de Promoção Comercial (VPC)**, campanhas e **projeção de faturamento**.
 
-First, run the development server:
+## Stack
+
+- Next.js 15 (App Router) + TypeScript
+- Prisma + **PostgreSQL (Neon)**
+- NextAuth (Credentials) — Vendedor, ADM, Gestor, Developer
+- Recharts, Excel (xlsx) e PDF (jsPDF)
+
+## Banco Neon (hospedado)
+
+1. Crie um projeto em [console.neon.tech](https://console.neon.tech)
+2. Em **Connect**, copie:
+   - **Pooled connection** → `DATABASE_URL` (app / Vercel)
+   - **Direct connection** → `DIRECT_URL` (migrate / seed)
+3. Cole no `.env` (local) e nas variáveis do host (Vercel etc.)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+copy .env.example .env
+# edite DATABASE_URL e DIRECT_URL com as URLs do Neon
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Crie as tabelas e (opcional) dados demo:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npx prisma db push
+npm run db:seed
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Como rodar local
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Abra [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy (ex.: Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Variáveis de ambiente obrigatórias:
 
-## Deploy on Vercel
+| Variável | Valor |
+|----------|--------|
+| `DATABASE_URL` | Neon **pooled** (`…-pooler…`) |
+| `DIRECT_URL` | Neon **direct** |
+| `NEXTAUTH_URL` | URL pública do app (`https://seu-dominio.vercel.app`) |
+| `NEXTAUTH_SECRET` | String longa aleatória |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Depois do deploy, rode o seed uma vez (local apontando para o Neon, ou `npx prisma db seed` com as envs de produção).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Logins demo (após seed)
+
+| Perfil | E-mail | Senha |
+|--------|--------|-------|
+| Developer | `developer@vpc.local` | `demo123` |
+| Gestor | `gestor@vpc.local` | `demo123` |
+| Administrador | `adm@vpc.local` | `demo123` |
+| Vendedor | `vendedor@vpc.local` | `demo123` |
+
+## Funcionalidades
+
+- Cadastro de distribuidores, produtos e usuários
+- Campanhas Sell Out, Vendeu Ganhou e Personalizada
+- Lançamento de verba e descontos (unitário e Excel)
+- Projeção de faturamento (pendente / ganho / perdido)
+- Flags de abas por usuário (perfil Developer)
+- Dashboard, extrato, alertas e relatório mensal
