@@ -8,8 +8,8 @@ import { Lock } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState("developer@vpc.local");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -98,12 +98,6 @@ function LoginForm() {
       <button type="submit" disabled={loading} className="btn-primary w-full">
         {loading ? "Entrando…" : "Entrar"}
       </button>
-
-      <div className="rounded-[10px] bg-paper border border-line p-3.5 text-xs text-muted space-y-1">
-        <p className="font-semibold text-ink">Acessos demo</p>
-        <p>developer@vpc.local · gestor@vpc.local · adm@vpc.local · vendedor@vpc.local</p>
-        <p>Senha: demo123</p>
-      </div>
     </form>
   );
 }
